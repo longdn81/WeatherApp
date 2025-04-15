@@ -1,15 +1,10 @@
 package com.example.weatherapp
 
-import android.content.ContentValues.TAG
-import android.nfc.Tag
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.core.provider.FontsContractCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.weatherapp.databinding.ActivityMainBinding
 
 import retrofit2.Call
@@ -67,6 +62,7 @@ class MainActivity : AppCompatActivity() {
             override fun onResponse(call: Call<WeatherApp>, response: Response<WeatherApp>) {
                 val responseBody = response.body()
                 if (response.isSuccessful && responseBody != null) {
+//                    query data
                     val temperature = responseBody.main.temp.toString()
 //                    Log.d("TAG" ,"onResponse : $temperature ")
                     val humidity = responseBody.main.humidity
@@ -77,33 +73,69 @@ class MainActivity : AppCompatActivity() {
                     val condition = responseBody.weather.firstOrNull()?.main ?: "unknown"
                     val maxTemp = responseBody.main.temp_max
                     val minTemp = responseBody.main.temp_min
-
+//                    add data
                     binding.temp.text = "$temperature °C"
                     binding.weather.text = condition
                     binding.maxTemp.text = "Max Temp: $maxTemp °C"
                     binding.minTemp.text = "Min Temp: $minTemp °C"
                     binding.humidity.text = "$humidity %"
                     binding.windSpeed.text = "$windSpeed m/s"
-                    binding.sunrise.text= "$sunRise"
-                    binding.sunset.text= "$sunSet"
+                    binding.sunrise.text= "${time(sunRise.toLong())}"
+                    binding.sunset.text="${time(sunSet.toLong())}"
                     binding.sea.text = "$seaLevel hPa"
                     binding.conditions.text = condition
                     binding.day.text = dayName(responseBody.dt.toLong())
                     binding.date.text = date()
                     binding.cityName.text = "$cityName"
+//                    change icon
+                    changeImagesAccordingToWeatherConditon(condition)
+
+
 
                 }
             }
-
             override fun onFailure(call: Call<WeatherApp>, t: Throwable) {
                 Log.e("WeatherError", t.message ?: "Error")
             }
         })
     }
+
+    private fun changeImagesAccordingToWeatherConditon(conditions: String) {
+        when (conditions) {
+            "Clear Sky", "Sunny", "Clear" -> {
+                binding.root.setBackgroundResource(R.drawable.sunny_background)
+                binding.lottieAnimationView2.setAnimation(R.raw.sun)
+            }
+            "Partly Clouds", "Clouds", "Overcast", "Mist", "Foggy" -> {
+                binding.root.setBackgroundResource(R.drawable.colud_background)
+                binding.lottieAnimationView2.setAnimation(R.raw.cloud)
+            }
+            "Light Rain", "Drizzle", "Moderate Rain", "Showers", "Heavy Rain" , "Rain" -> {
+                binding.root.setBackgroundResource(R.drawable.rain_background)
+                binding.lottieAnimationView2.setAnimation(R.raw.rain)
+            }
+            "Light Snow", "Moderate Snow", "Heavy Snow", "Blizzard" , "Snow" -> {
+                binding.root.setBackgroundResource(R.drawable.snow_background)
+                binding.lottieAnimationView2.setAnimation(R.raw.snow)
+            }
+            else -> {
+                binding.root.setBackgroundResource(R.drawable.sunny_background)
+                binding.lottieAnimationView2.setAnimation(R.raw.sun)
+            }
+
+        }
+        binding.lottieAnimationView2.playAnimation()
+
+    }
 }
 private fun date(): String {
     val sdf = SimpleDateFormat("dd. MMMM yyyy", Locale.getDefault())
     return sdf.format(Date())
+}
+
+private fun time(timestamp: Long): String {
+    val sdf = SimpleDateFormat("HH : mm", Locale.getDefault())
+    return sdf.format(Date(timestamp * 1000))
 }
 
 fun dayName(timestamp: Long): String {
