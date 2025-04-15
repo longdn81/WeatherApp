@@ -346,13 +346,13 @@
                 tools:ignore="MissingConstraints">
 
                 <ImageView
-                    android:id="@+id/sea"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:srcCompat="@drawable/sea" />
 
                 <TextView
 
+                    android:id="@+id/sea"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/merriweathersans_medium"
