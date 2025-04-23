@@ -5,11 +5,10 @@ import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.lifecycle.lifecycleScope
 import com.example.weatherapp.databinding.ActivityMainBinding
+import kotlinx.coroutines.launch
 
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
@@ -57,22 +56,26 @@ class MainActivity : AppCompatActivity() {
             .build()
             .create(ApiInterface::class.java)
 
-        val response =retrofit.getWeatherData(cityName , "eb0157648b9ed12cd1635d6bc2534568" ,"metric")
-        response.enqueue(/* callback = */ object : Callback<WeatherApp> {
-            override fun onResponse(call: Call<WeatherApp>, response: Response<WeatherApp>) {
-                val responseBody = response.body()
-                if (response.isSuccessful && responseBody != null) {
-//                    query data
-                    val temperature = responseBody.main.temp.toString()
+
+        lifecycleScope.launch {
+            try {
+                val response = retrofit.getWeatherData(
+                    cityName,
+                    "eb0157648b9ed12cd1635d6bc2534568",
+                    "metric"
+                )
+
+//                query data
+                    val temperature = response.main.temp.toString()
 //                    Log.d("TAG" ,"onResponse : $temperature ")
-                    val humidity = responseBody.main.humidity
-                    val windSpeed = responseBody.wind.speed
-                    val sunRise = responseBody.sys.sunrise
-                    val sunSet = responseBody.sys.sunset
-                    val seaLevel = responseBody.main.pressure
-                    val condition = responseBody.weather.firstOrNull()?.main ?: "unknown"
-                    val maxTemp = responseBody.main.temp_max
-                    val minTemp = responseBody.main.temp_min
+                    val humidity = response.main.humidity
+                    val windSpeed = response.wind.speed
+                    val sunRise = response.sys.sunrise
+                    val sunSet = response.sys.sunset
+                    val seaLevel = response.main.pressure
+                    val condition = response.weather.firstOrNull()?.main ?: "unknown"
+                    val maxTemp = response.main.temp_max
+                    val minTemp = response.main.temp_min
 //                    add data
                     binding.temp.text = "$temperature °C"
                     binding.weather.text = condition
@@ -84,21 +87,17 @@ class MainActivity : AppCompatActivity() {
                     binding.sunset.text="${time(sunSet.toLong())}"
                     binding.sea.text = "$seaLevel hPa"
                     binding.conditions.text = condition
-                    binding.day.text = dayName(responseBody.dt.toLong())
+                    binding.day.text = dayName(response.dt.toLong())
                     binding.date.text = date()
                     binding.cityName.text = "$cityName"
 //                    change icon
                     changeImagesAccordingToWeatherConditon(condition)
-
-
-
-                }
+            } catch (e: Exception) {
+                Log.e("API_ERROR", "Lỗi khi gọi API", e)
             }
-            override fun onFailure(call: Call<WeatherApp>, t: Throwable) {
-                Log.e("WeatherError", t.message ?: "Error")
-            }
-        })
+        }
     }
+
 
     private fun changeImagesAccordingToWeatherConditon(conditions: String) {
         when (conditions) {
